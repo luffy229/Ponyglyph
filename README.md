@@ -1,50 +1,72 @@
-# Welcome to your Expo app 👋
+🚀 React Native Social Media App
+A cross-platform social media app built with React Native + Expo, featuring authentication, real-time data, interactive features, and optimized performance.
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+🌟 Key Features
+📱 Cross-Platform Mobile App
+Built using React Native + Expo, running on iOS, Android, and simulators.
+🔐 Authentication
+Clerk integration for Google login.
+🔄 Real-Time Features
+Convex Backend for live updates and dynamic data handling.
+📊 7 Fully Functional Screens
+Auth – Login & signup
+Home – Browse latest posts
+Bookmarks – Save favorite posts
+Create – Upload and share posts
+Notifications – See real-time alerts
+Profile – View and edit user profile
+User Profiles – Discover and interact with other users
+❤️ Social Features
+Like, comment, bookmark, follow functionality.
+🖼️ Media Upload
+Upload and share images directly from the device.
+🔔 Interactive Notifications
+Receive like, follow, and comment notifications.
+✏️ Profile Customization
+Animated modal for easy profile updates.
+📱 Mobile Development Concepts
+Splash screen, SafeAreaView, tab & stack navigators for smooth UI.
+⚡ Performance Optimization
+Optimized for speed and responsiveness.
+🎨 Custom Styling
+Custom fonts, app icons, and theme for a great look.
+🚀 Get Started
+1️⃣ Install Dependencies
+bash
+Copy
+Edit
+npm install
+2️⃣ Start the App
+bash
+Copy
+Edit
+npx expo start
+You’ll get options to open the app in:
 
-## Get started
+Development build
+Android emulator
+iOS simulator
+Expo Go
+The project follows file-based routing, and you can start developing inside the app/ directory.
 
-1. Install dependencies
+🆕 Reset the Project
+To get a fresh project setup, run:
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
+bash
+Copy
+Edit
 npm run reset-project
-```
+This will move the starter code to app-example/ and create a new blank app/ directory.
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+📚 Learn More
+Explore more about Expo & React Native development:
 
-## Learn more
+📖 Expo Documentation
+📚 Learn Expo Tutorial
+🌍 Join the Community
+⭐ Expo on GitHub – Open source contributions
+💬 Discord Community – Chat with developers
+📜 License
+This project is licensed under the MIT License.
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+This README provides a professional, structured, and engaging introduction to your project. Let me know if you need any modifications! 🚀
