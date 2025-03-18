@@ -58,6 +58,18 @@ Edit
 npm run reset-project
 This will move the starter code to app-example/ and create a new blank app/ directory.
 
+🔥 Coming Soon! 🚀
+We’re constantly working on exciting new features to make this app even better!
+
+Upcoming Features:
+✅ In-app Chat – Real-time messaging system 📩
+✅ Stories Section – Share daily updates with your followers 📸
+✅ And many more surprises! 🎉
+
+💡 Stay Updated & Support Us!
+💙 If you like this project, don’t forget to star it on GitHub! ⭐
+🔔 Follow for updates as we roll out new features!
+
 📚 Learn More
 Explore more about Expo & React Native development:
 
@@ -68,5 +80,3 @@ Explore more about Expo & React Native development:
 💬 Discord Community – Chat with developers
 📜 License
 This project is licensed under the MIT License.
-
-This README provides a professional, structured, and engaging introduction to your project. Let me know if you need any modifications! 🚀
