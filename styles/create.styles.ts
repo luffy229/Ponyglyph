@@ -70,9 +70,21 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  imageContainer: {
+    width: width,
+    height: width,
+    position: "relative",
+  },
   previewImage: {
     width: "100%",
     height: "100%",
+  },
+  removeImageButton: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    borderRadius: 12,
   },
   changeImageButton: {
     position: "absolute",

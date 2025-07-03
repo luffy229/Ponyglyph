@@ -11,119 +11,137 @@ export const generateUploadUrl = mutation(async (ctx) => {
 
 export const createPost = mutation({
     args: {
-        caption :v.optional(v.string()),
-        storageId: v.id("_storage"),
-
+        caption: v.optional(v.string()),
+        storageIds: v.array(v.id("_storage")),
+        type: v.optional(v.union(v.literal("image"), v.literal("video"))),
     },
-    handler: async ( ctx, args ) => {
-        const currentUser =  await getAuthenticatedUser(ctx);
+    handler: async (ctx, args) => {
+        const currentUser = await getAuthenticatedUser(ctx);
+        
+        if (args.storageIds.length === 0) throw new Error("No media provided");
 
-        const imageUrl = await ctx.storage.getUrl(args.storageId);
-        if (!imageUrl) throw new Error("Image Not Found");
+        // Get URLs for all media
+        const mediaUrls = await Promise.all(
+            args.storageIds.map(async (storageId) => {
+                const url = await ctx.storage.getUrl(storageId);
+                if (!url) throw new Error("Media Not Found");
+                return { imageUrl: url, storageId };
+            })
+        );
 
-        // createPost
-
-         const postId = await ctx.db.insert("posts", {
+        // Create post with first media as main media and rest as additional media
+        const postId = await ctx.db.insert("posts", {
             userId: currentUser._id,
-            imageUrl,
-            storageId: args.storageId,
+            imageUrl: mediaUrls[0].imageUrl,
+            storageId: mediaUrls[0].storageId,
             caption: args.caption,
             likes: 0,
             comments: 0,
+            type: args.type || "image",
+            additionalImages: mediaUrls.slice(1),
+        });
 
-        })
-
-        //increment user's posts by 1
-
+        // Increment user's posts count
         await ctx.db.patch(currentUser._id, {
             posts: currentUser.posts + 1
-        })
+        });
 
         return postId;
     }    
 });
 
-
 export const getFeedPosts = query({
     handler: async(ctx) => {
-        const currentUser =  await getAuthenticatedUser(ctx);
+        const currentUser = await getAuthenticatedUser(ctx);
 
         //get all post
-
-        const posts = await ctx.db.query("posts").order("desc").collect()
+        const posts = await ctx.db.query("posts").order("desc").collect();
 
         if (posts.length === 0) return [];
 
         //enhance posts
-
-        const postsWithInfo = await Promise.all (
+        const postsWithInfo = await Promise.all(
             posts.map(async(post) => {
-                const postAuthor = (await ctx.db.get(post.userId))!;
+                const postAuthor = (await ctx.db.get(post.userId));
+                if (!postAuthor) throw new Error("Post author not found");
 
-            const like = await ctx.db
-                .query("likes")
-                .withIndex("by_user_and_post", (q) =>
-                    q.eq("userId", currentUser._id).eq("postId", post._id)
-            ).first();
+                // Check if post is liked
+                const likes = await ctx.db
+                    .query("likes")
+                    .withIndex("by_user_post", (q) => 
+                        q.eq("userId", currentUser._id)
+                         .eq("postId", post._id)
+                    )
+                    .collect();
 
-            const bookmark = await ctx.db
-                .query("bookmarks")
-                .withIndex("by_user_and_post", (q) =>
-                    q.eq("userId", currentUser._id).eq("postId", post._id)
-            ).first();
+                // Check if post is bookmarked
+                const bookmarks = await ctx.db
+                    .query("bookmarks")
+                    .withIndex("by_user_post", (q) => 
+                        q.eq("userId", currentUser._id)
+                         .eq("postId", post._id)
+                    )
+                    .collect();
 
-            return {
-                ...post,
-                author: {
-                    _id:postAuthor?._id,
-                    username: postAuthor?.username,
-                    image:postAuthor?.image
-                },
-                isLiked:!!like,
-                isBookmarked:!!bookmark
-            }
-
-
+                return {
+                    ...post,
+                    author: {
+                        _id: postAuthor._id,
+                        username: postAuthor.username,
+                        image: postAuthor.image
+                    },
+                    isLiked: likes.length > 0,
+                    isBookmarked: bookmarks.length > 0
+                };
             })
         );
 
-
         return postsWithInfo;
-        
-        
     }
-
 });
 
 export const toggleLike = mutation({
-    args:{postId: v.id("posts")},
-    handler: async (ctx,args) => {
+    args: { postId: v.id("posts") },
+    handler: async (ctx, args) => {
         const currentUser = await getAuthenticatedUser(ctx);
-        
+
+        // Check if already liked using filter
         const existing = await ctx.db
             .query("likes")
-            .withIndex("by_user_and_post", (q) =>
-                q.eq("userId", currentUser._id).eq("postId",args.postId)
+            .filter((q) => 
+                q.and(
+                    q.eq(q.field("userId"), currentUser._id),
+                    q.eq(q.field("postId"), args.postId)
+                )
             )
-            .first();
-        
-        const post = await ctx.db.get(args.postId);
-        if (!post) throw new Error ("Post not found");
+            .unique();
 
-        if(existing) {
-            //remove like
+        if (existing) {
             await ctx.db.delete(existing._id);
-            await ctx.db.patch(args.postId, { likes: post.likes - 1});
-            return false; //unliked
-        }else {
-            //add like
-            await ctx.db.insert("likes", {
-                userId: currentUser._id,
-                postId: args.postId,
-            });
-            await ctx.db.patch(args.postId, {likes: post.likes + 1 })
+            // Decrement likes count
+            const post = await ctx.db.get(args.postId);
+            if (post) {
+                await ctx.db.patch(args.postId, {
+                    likes: post.likes - 1,
+                });
+            }
+            return false;
+        }
 
-            //if its not my post create a notification
+        // Add like
+        await ctx.db.insert("likes", {
+            userId: currentUser._id,
+            postId: args.postId,
+        });
+
+        // Increment likes count
+        const post = await ctx.db.get(args.postId);
+        if (post) {
+            await ctx.db.patch(args.postId, {
+                likes: post.likes + 1,
+            });
+
+            // Create notification if it's not my post
             if (currentUser._id !== post.userId) {
                 await ctx.db.insert("notifications", {
                     receiverId: post.userId,
@@ -132,11 +150,66 @@ export const toggleLike = mutation({
                     postId: args.postId,
                 });
             }
-            return true;//liked
         }
-            
-    }
-})
+        return true;
+    },
+});
+
+export const addComment = mutation({
+    args: { 
+        postId: v.id("posts"),
+        comment: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const currentUser = await getAuthenticatedUser(ctx);
+
+        // Add comment
+        const commentId = await ctx.db.insert("comments", {
+            userId: currentUser._id,
+            postId: args.postId,
+            comment: args.comment,
+        });
+
+        // Increment comments count
+        const post = await ctx.db.get(args.postId);
+        if (post) {
+            await ctx.db.patch(args.postId, {
+                comments: post.comments + 1,
+            });
+        }
+
+        return commentId;
+    },
+});
+
+export const getComments = query({
+    args: { postId: v.id("posts") },
+    handler: async (ctx, args) => {
+        const comments = await ctx.db
+            .query("comments")
+            .filter((q) => q.eq(q.field("postId"), args.postId))
+            .collect();
+
+        const commentsWithUser = await Promise.all(
+            comments.map(async (comment) => {
+                const user = await ctx.db.get(comment.userId);
+                if (!user) throw new Error("User not found");
+                
+                return {
+                    _id: comment._id,
+                    comment: comment.comment,
+                    user: {
+                        _id: user._id,
+                        username: user.username,
+                        image: user.image,
+                    },
+                };
+            })
+        );
+
+        return commentsWithUser;
+    },
+});
 
 export const deletePost = mutation({
     args: {postId: v.id("posts")},

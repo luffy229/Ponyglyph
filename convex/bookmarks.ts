@@ -1,26 +1,33 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getAuthenticatedUser } from "./users";
+import { Id } from "./_generated/dataModel";
 
 export const toggleBookmark = mutation({
     args: { postId: v.id("posts") },
     handler: async (ctx, args) => {
         const currentUser = await getAuthenticatedUser(ctx);
 
-        const existing = await ctx.db
+        // Check if already bookmarked
+        const bookmarks = await ctx.db
             .query("bookmarks")
-            .withIndex("by_user_and_post", (q) => 
-                q.eq("userId", currentUser._id).eq("postId",args.postId)
+            .withIndex("by_user_post", (q) => 
+                q.eq("userId", currentUser._id)
+                 .eq("postId", args.postId)
             )
-            .first();
+            .collect();
 
-        if (existing) {
-            await ctx.db.delete(existing._id);
+        if (bookmarks.length > 0) {
+            await ctx.db.delete(bookmarks[0]._id);
             return false;
-        }else {
-            await ctx.db.insert("bookmarks", {userId: currentUser._id, postId: args.postId});
-            return true;
         }
+
+        // Add bookmark
+        await ctx.db.insert("bookmarks", {
+            userId: currentUser._id,
+            postId: args.postId,
+        });
+        return true;
     }
 });
 
@@ -32,7 +39,6 @@ export const getBookmarkedPosts = query({
         const bookmarks = await ctx.db
             .query("bookmarks")
             .withIndex("by_user", (q) => q.eq("userId", currentUser._id))
-            .order("desc")
             .collect();
 
         const bookmarksWithInfo = await Promise.all(

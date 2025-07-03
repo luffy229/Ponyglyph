@@ -1,9 +1,8 @@
-
 import { COLORS } from "@/constants/theme";
-import { useAuth } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
-import { Alert, FlatList, RefreshControl, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, RefreshControl, Text, TouchableOpacity, View } from "react-native";
 import { styles } from "../../styles/feed.styles";
+import { useRouter } from "expo-router";
 
 import { Loader } from "@/components/Loader";
 import Post from "@/components/Post";
@@ -13,10 +12,11 @@ import StoriesSection from "../../components/Stories";
 import { useState } from "react";
 
 export default function Index() {
-  const { signOut } = useAuth();
+  const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
   
-  const posts = useQuery(api.posts.getFeedPosts)
+  const posts = useQuery(api.posts.getFeedPosts);
+  const unreadCount = useQuery(api.chat.getUnreadCount);
 
   if(posts === undefined) return <Loader />
 
@@ -27,46 +27,44 @@ export default function Index() {
     setTimeout(() => {
       setRefreshing(false);
     }, 2000);
-    
-
   }
 
   return (
     <View style={styles.container}>
       {/* Header */}
-
-      <View style= {styles.header}>
+      <View style={styles.header}>
         <Text style={styles.headerTitle}>Poneglyph</Text>
-        <TouchableOpacity onPress={() => confirmLogout(signOut)}>
-          <Ionicons name="log-out-outline" size={24} color={COLORS.primary}></Ionicons>
-
+        <TouchableOpacity 
+          onPress={() => router.push("/chat")}
+          style={{ marginRight: 5 }}
+        >
+          <Ionicons name="chatbubble-outline" size={24} color={COLORS.primary} />
+          {unreadCount !== undefined && unreadCount > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{unreadCount}</Text>
+            </View>
+          )}
         </TouchableOpacity>
-
       </View>
 
       <FlatList
-      data={posts}
-      renderItem={({item}) => <Post post={item} /> }
-      keyExtractor={(item) => item._id}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: 60 }}
-      ListHeaderComponent={<StoriesSection />}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={COLORS.primary}
-        />
-      }
+        data={posts}
+        renderItem={({item}) => <Post post={item} /> }
+        keyExtractor={(item) => item._id}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 60 }}
+        ListHeaderComponent={<StoriesSection />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={COLORS.primary}
+          />
+        }
       />
     </View>
   );
 }
-
-
-
-
-
 
 const NoPostsFound = () => (
   <View
@@ -77,21 +75,8 @@ const NoPostsFound = () => (
       alignItems: "center",
     }}
   >
-    <Text style={{ fontSize: 20, color: COLORS.primary, }}>
+    <Text style={{ fontSize: 20, color: COLORS.primary }}>
       No Posts Yet
-
     </Text>
-
   </View>
 );
-
-const confirmLogout = (signOut: () => void) => {
-  Alert.alert(
-    "Logout",
-    "Are you sure you want to logout?",
-    [
-      { text: "Cancel", style: "cancel" },
-      { text: "Logout", onPress: signOut, style: "destructive" }
-    ]
-  );
-};

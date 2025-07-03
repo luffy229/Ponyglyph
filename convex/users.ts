@@ -160,3 +160,29 @@ async function updateFollowCounts(
     }
 
 }
+
+export const getFollowing = query({
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const currentUser = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("clerkId"), identity.subject))
+      .first();
+    if (!currentUser) throw new Error("User not found");
+
+    const follows = await ctx.db
+      .query("follows")
+      .filter((q) => q.eq(q.field("followerId"), currentUser._id))
+      .collect();
+
+    const followingIds = follows.map((follow) => follow.followingId);
+
+    const following = await Promise.all(
+      followingIds.map((id) => ctx.db.get(id))
+    );
+
+    return following.filter(Boolean);
+  },
+});
