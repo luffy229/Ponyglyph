@@ -76,7 +76,7 @@ This will move the starter code to `app-example/` and create a **new blank `app/
 ---
 
 ## 🔥 Coming Soon! 🚀
-We’re constantly working on **exciting new features** to make this app even better!
+I am constantly working on **exciting new features** to make this app even better!
 
 ### Upcoming Features:
 ✅ **In-app Chat** – Real-time messaging system 📩
@@ -85,7 +85,7 @@ We’re constantly working on **exciting new features** to make this app even be
 
 ---
 
-## 💡 Stay Updated & Support Us!
+## 💡 Stay Updated & Support Me!
 💙 If you like this project, **don’t forget to star it on GitHub!** ⭐
 🔔 Follow for updates as we roll out new features!
 
